@@ -1,0 +1,4 @@
+
+replicaCount: 5
+profile: prd
+host: prd.minikube.local

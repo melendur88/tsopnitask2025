@@ -1,0 +1,77 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spring-boot-api
+  labels:
+    app: spring-boot-api
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: spring-boot-api
+  template:
+    metadata:
+      labels:
+        app: spring-boot-api
+    spec:
+      containers:
+        - name: spring-boot-api
+          image: busybox:stable
+          command: ["/bin/sh"]
+          args:
+            - "-c"
+            - |
+              echo "Running with profile {{ .Values.profile }}" && \
+              (while true; do echo 'Fake service running on port 8080 with args --spring.profiles.active={{ .Values.profile }}' | nc -lk -p 8080 > /dev/null; done) & \
+              (while true; do echo 'Fake service running on port 8081 with args --spring.profiles.active={{ .Values.profile }}' | nc -lk -p 8081 > /dev/null; done) & \
+              (while true; do echo 'Fake service running on port 8082 with args --spring.profiles.active={{ .Values.profile }}' | nc -lk -p 8082 > /dev/null; done) && \
+              wait
+          ports:
+            - containerPort: 8080
+            - containerPort: 8081
+            - containerPort: 8082
+          volumeMounts:
+            - name: config-volume
+              mountPath: /app/config.json
+              subPath: config.json
+              readOnly: false
+          env:
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: spring-boot-secrets
+                  key: db-password
+            - name: DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: spring-boot-secrets
+                  key: db-name
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "250m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
+          livenessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 60
+            periodSeconds: 120
+          readinessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 60
+            periodSeconds: 120
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sh", "-c", "wget -O http://localhost:8080/service/shutdown && echo Shutdown triggered >> /app/shutdown.log"]
+      volumes:
+        - name: config-volume
+          configMap:
+            name: spring-boot-config

@@ -1,0 +1,35 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: spring-boot-api-appset # Nazwa ApplicationSeta w Argo CD.
+  namespace: argocd           # Namespace, w którym działa Argo CD.
+spec:
+  # Generator list umożliwia definiowanie wielu środowisk (klastry + konfiguracje).
+  generators:
+    - list:  
+        elements:
+          - cluster: https://kubernetes.default.svc # Kube API server for dev.
+            environment: dev
+          - cluster: https://kubernetes.default.svc # Kube API server for prod.
+            environment: prd
+
+  # Template określa, jak generowane są aplikacje na podstawie powyższego generatora.
+  template:
+    metadata:
+      name: spring-boot-api-{{ environment }}
+    spec:
+      project: default
+      source:
+        repoURL: 'https://github.com/melendur88/tstopnitest.git' # Repozytorium z Helm Chart.
+        targetRevision: HEAD                # Gałąź lub commit do śledzenia.
+        path: 1task                         # Ścieżka do katalogu z plikami.
+        helm:
+          valueFiles:
+            - var-{{ environment }}.yaml    # Wybór pliku wartości dla środowiska: prd lub dev.
+      destination:
+        server: '{{ cluster }}'             # Kube API server (zdefiniowany w generatorze).
+        namespace: spring-boot-api-{{ environment }} # Namespace aplikacji dla każdego środowiska.
+      syncPolicy:
+        automated:
+          prune: true                       # Usuwa zasoby, które nie znajdują się w repozytorium.
+          selfHeal: true                    # Automatycznie synchronizuje zasoby po ręcznych zmianach w klastrze.

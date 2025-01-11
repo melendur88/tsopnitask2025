@@ -1,0 +1,7 @@
+project               = "xxxxxxxxxxxxxxxx"
+region                = "europe-west1"
+network_name          = "testproject"
+ip_cidr_range_app     = "192.168.1.0/27"
+ip_cidr_range_api     = "192.168.1.32/27"
+ip_cidr_range_db      = "192.168.1.64/27"
+number_of_instances_api = "2"

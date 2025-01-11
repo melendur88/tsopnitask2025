@@ -1,0 +1,6 @@
+.pem
+**/.terraform/modules
+**/.terraform/providers
+**/.terraform/terraform.tfstate
+.terraform.lock.hcl
+terraform.tfstate.backup

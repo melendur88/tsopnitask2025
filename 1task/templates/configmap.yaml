@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: spring-boot-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: spring-boot-api
+data:
+  config.json: |
+    {
+      "key": "value",
+      "description": "Sample config file for spring-boot-api",
+      "password" : "$DB_PASSWORD"
+      "db-name" : "$DB_NAME"
+    }

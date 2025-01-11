@@ -1,0 +1,4 @@
+
+replicaCount: 3
+profile: dev
+host: dev.minikube.local
